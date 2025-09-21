@@ -1,4 +1,5 @@
 import csv
+import re
 
 wordFreq = {}
 try:
@@ -60,14 +61,26 @@ def find_correct_spelling(word):
 
     likely = generate_edits(word)
 
-    known_words = set()
+    known_words1 = set()
     for word in likely:
         if contains(word):
-            known_words.add(word)
+            known_words1.add(word)
 
-    if known_words:
-        return max(known_words, key=wordFreq.get)
+    if known_words1:
+        return max(known_words1, key=wordFreq.get)
+
+    likely2 = set()
+    for word in likely:
+        likely2.update(generate_edits(word))
+
+    known_words2 = set()
+    for word in likely2:
+        if contains(word):
+            known_words2.add(word)
+
+    if known_words2:
+        return max(known_words2, key=wordFreq.get)
     return None
 
 
-print(find_correct_spelling("applyinj"))
+print(find_correct_spelling("Dreem"))
