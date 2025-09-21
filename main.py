@@ -11,10 +11,10 @@ except FileNotFoundError:
 
 
 def contains(word):
-    if word in wordFreq:
-        print("correctly spelled")
+    if word.lower() in wordFreq:
+        return True
     else:
-        print("not")
+        return False
 
 
 def generate_edits(word):
@@ -52,4 +52,22 @@ def generate_edits(word):
     return deletes.union(swaps, replaces, inserts)
 
 
-print(generate_edits("cat"))
+def find_correct_spelling(word):
+    if contains(word):
+        return word
+
+    word = word.lower()
+
+    likely = generate_edits(word)
+
+    known_words = set()
+    for word in likely:
+        if contains(word):
+            known_words.add(word)
+
+    if known_words:
+        return max(known_words, key=wordFreq.get)
+    return None
+
+
+print(find_correct_spelling("applyinj"))
