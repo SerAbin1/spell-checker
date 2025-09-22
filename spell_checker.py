@@ -80,9 +80,15 @@ def find_correct_spelling(word, wordFreq):
     return None
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Suggest correct spelling")
     parser.add_argument("words", nargs="+", help="One or more words to spell check")
+    parser.add_argument(
+        "-b",
+        "--benchmark",
+        action="store_true",
+        help="Run benchmark and print timing info",
+    )
 
     args = parser.parse_args()
     words_to_check = args.words
@@ -91,7 +97,8 @@ if __name__ == "__main__":
     if not wordFrequencies:
         sys.exit(1)
 
-    start_time = time.perf_counter()
+    if args.benchmark:
+        start_time = time.perf_counter()
 
     for word in words_to_check:
         correct = find_correct_spelling(word.lower(), wordFrequencies)
@@ -99,10 +106,15 @@ if __name__ == "__main__":
             correct = word
         print(f"{word} {correct}")
 
-    end_time = time.perf_counter()
-    total_time_sec = end_time - start_time
-    total_time_ms = total_time_sec * 1000
-    num_words = len(args.words)
-    words_per_sec = num_words / total_time_sec if total_time_sec > 0 else 0
+    if args.benchmark:
+        end_time = time.perf_counter()
+        total_time_sec = end_time - start_time
+        total_time_ms = total_time_sec * 1000
+        num_words = len(args.words)
+        words_per_sec = num_words / total_time_sec if total_time_sec > 0 else 0
 
-    print(f"Time : {total_time_ms:.6f}ms {words_per_sec:.1f} words per second")
+        print(f"Time : {total_time_ms:.6f}ms {words_per_sec:.1f} words per second")
+
+
+if __name__ == "__main__":
+    main()
