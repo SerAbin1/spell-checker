@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 import csv
 import sys
@@ -74,14 +73,9 @@ def find_correct_spelling(word, wordFreq):
     if known_words1:
         return max(known_words1, key=wordFreq.get)
 
-    likely2 = set()
-    for candidate in likely:
-        likely2.update(generate_edits(candidate))
-
-    known_words2 = set()
-    for candidate in likely2:
-        if contains(candidate, wordFreq):
-            known_words2.add(candidate)
+    known_words2 = set(
+        e2 for e1 in likely for e2 in generate_edits(e1) if contains(e2, wordFreq)
+    )
 
     if known_words2:
         return max(known_words2, key=wordFreq.get)
