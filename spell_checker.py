@@ -11,15 +11,15 @@ def load_data(file):
         with open(file, newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                wordFreq[row["word"]] = int(row["count"])
+                wordFreq[row["word"].lower()] = int(row["count"])
 
         return wordFreq
     except FileNotFoundError:
-        print("Error: unigram_freq.csv not found")
+        print(f"Error: {file} not found")
 
 
 def contains(word, wordFreq):
-    return word.lower() in wordFreq
+    return word in wordFreq
 
 
 def generate_edits(word):
@@ -61,8 +61,6 @@ def find_correct_spelling(word, wordFreq):
     if contains(word, wordFreq):
         return word
 
-    word = word.lower()
-
     likely = generate_edits(word)
 
     known_words1 = set()
@@ -87,6 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("words", nargs="+", help="One or more words to spell check")
 
     args = parser.parse_args()
+    words_to_check = args.words
 
     wordFrequencies = load_data("unigram_freq.csv")
     if not wordFrequencies:
@@ -94,8 +93,8 @@ if __name__ == "__main__":
 
     start_time = time.perf_counter()
 
-    for word in args.words:
-        correct = find_correct_spelling(word, wordFrequencies)
+    for word in words_to_check:
+        correct = find_correct_spelling(word.lower(), wordFrequencies)
         if correct is None:
             correct = word
         print(f"{word} {correct}")
