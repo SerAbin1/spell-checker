@@ -24,7 +24,15 @@ To use the spell checker, run the following command:
 python3 spell_checker.py <word1> <word2> ...
 ```
 
+To benchmark the spell checker, use the `-b` or `--benchmark` flag:
+
+```bash
+python3 spell_checker.py -b <word1> <word2> ...
+```
+
 ### Example
+
+Without benchmark:
 
 ```bash
 python3 spell_checker.py speling corect
@@ -35,14 +43,31 @@ Output:
 ```
 speling spelling
 corect correct
+```
+
+With benchmark:
+
+```bash
+python3 spell_checker.py -b speling corect
+```
+
+Output:
+
+```
+speling spelling
+corect correct
 Time : 1.234567ms 1.6 words per second
 ```
+
+## Data
+
+The spell checker uses `unigram_freq.csv` as the frequency dictionary. This file is from [Kaggle](https://www.kaggle.com/datasets/rtatman/english-word-frequency?resource=download).
 
 ## Algorithm
 
 The spell-checking algorithm is based on the following steps:
 
-1.  **Load Data:** The frequency dictionary is loaded from `unigram_freq.csv`, which is taken from [Kaggle](https://www.kaggle.com/datasets/rtatman/english-word-frequency?resource=download).
+1.  **Load Data:** The frequency dictionary is loaded from `unigram_freq.csv`.
 2.  **Check if the word is in the dictionary:** If the word is already in the dictionary, it is considered correct.
 3.  **Generate Edits (Distance 1):** If the word is not in the dictionary, the tool generates a set of all possible words at an edit distance of 1. The edits include:
     - **Deletes:** Removing a single character.

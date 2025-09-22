@@ -5,7 +5,7 @@ import sys
 import time
 
 
-class SpellCorrector:
+class SpellChecker:
     def __init__(self, path_to_dataset) -> None:
         self.word_frequencies = self.load_data(path_to_dataset)
         if not self.word_frequencies:
@@ -96,13 +96,13 @@ def main():
     args = parser.parse_args()
     words_to_check = args.words
 
-    spell_correcter = SpellCorrector("unigram_freq.csv")
+    checker = SpellChecker("unigram_freq.csv")
 
     if args.benchmark:
         start_time = time.perf_counter()
 
     for word in words_to_check:
-        correct = spell_correcter.find_correct_spelling(word.lower())
+        correct = checker.find_correct_spelling(word.lower())
         if correct is None:
             correct = word
         print(f"{word} {correct}")
