@@ -5,79 +5,82 @@ import sys
 import time
 
 
-def load_data(file):
-    wordFreq = {}
-    try:
-        with open(file, newline="") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                wordFreq[row["word"].lower()] = int(row["count"])
+class SpellCorrector:
+    def __init__(self, path_to_dataset) -> None:
+        self.word_frequencies = self.load_data(path_to_dataset)
+        if not self.word_frequencies:
+            raise FileNotFoundError(f"The file {path_to_dataset} not found")
 
-        return wordFreq
-    except FileNotFoundError:
-        print(f"Error: {file} not found")
+    def load_data(self, file):
+        wordFreq = {}
+        try:
+            with open(file, newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    wordFreq[row["word"].lower()] = int(row["count"])
 
+            return wordFreq
+        except FileNotFoundError:
+            return None
 
-def contains(word, wordFreq):
-    return word in wordFreq
+    def contains(self, word):
+        return word in self.word_frequencies
 
+    def generate_edits(self, word):
+        letters = "abcdefghijklmnopqrstuvwxyz"
 
-def generate_edits(word):
-    letters = "abcdefghijklmnopqrstuvwxyz"
+        # create all possible combination of words (("", cat), (c, at), (ca, t), (cat, ""))
+        splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
 
-    # create all possible combination of words (("", cat), (c, at), (ca, t), (cat, ""))
-    splits = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+        # delete a char (from right split)
+        deletes = set()
+        for left, right in splits:
+            if right:
+                deletes.add(left + right[1:])
 
-    # delete a char (from right split)
-    deletes = set()
-    for left, right in splits:
-        if right:
-            deletes.add(left + right[1:])
+        # swap two adjacent letters
+        swaps = set()
+        for left, right in splits:
+            if len(right) > 1:
+                swaps.add(left + right[1] + right[0] + right[2:])
 
-    # swap two adjacent letters
-    swaps = set()
-    for left, right in splits:
-        if len(right) > 1:
-            swaps.add(left + right[1] + right[0] + right[2:])
+        # replace a letter with each letter in alphabet
+        replaces = set()
+        for left, right in splits:
+            if right:
+                for char in letters:
+                    replaces.add(left + char + right[1:])
 
-    # replace a letter with each letter in alphabet
-    replaces = set()
-    for left, right in splits:
-        if right:
+        # insert a letter at every position
+        inserts = set()
+        for left, right in splits:
             for char in letters:
-                replaces.add(left + char + right[1:])
+                inserts.add(left + char + right)
 
-    # insert a letter at every position
-    inserts = set()
-    for left, right in splits:
-        for char in letters:
-            inserts.add(left + char + right)
+        # Return a union of all sets
+        return deletes.union(swaps, replaces, inserts)
 
-    # Return a union of all sets
-    return deletes.union(swaps, replaces, inserts)
+    def find_correct_spelling(self, word):
+        if self.contains(word):
+            return word
 
+        likely = self.generate_edits(word)
 
-def find_correct_spelling(word, wordFreq):
-    if contains(word, wordFreq):
-        return word
+        known_words1 = set()
+        for candidate in likely:
+            if self.contains(candidate):
+                known_words1.add(candidate)
 
-    likely = generate_edits(word)
+        if known_words1:
+            return max(known_words1, key=self.word_frequencies.get)
 
-    known_words1 = set()
-    for candidate in likely:
-        if contains(candidate, wordFreq):
-            known_words1.add(candidate)
+        known_words2 = set(
+            e2 for e1 in likely for e2 in self.generate_edits(e1) if self.contains(e2)
+        )
 
-    if known_words1:
-        return max(known_words1, key=wordFreq.get)
-
-    known_words2 = set(
-        e2 for e1 in likely for e2 in generate_edits(e1) if contains(e2, wordFreq)
-    )
-
-    if known_words2:
-        return max(known_words2, key=wordFreq.get)
-    return None
+        if known_words2:
+            return max(known_words2, key=self.word_frequencies.get)
+        return None
 
 
 def main():
@@ -93,15 +96,13 @@ def main():
     args = parser.parse_args()
     words_to_check = args.words
 
-    wordFrequencies = load_data("unigram_freq.csv")
-    if not wordFrequencies:
-        sys.exit(1)
+    spell_correcter = SpellCorrector("unigram_freq.csv")
 
     if args.benchmark:
         start_time = time.perf_counter()
 
     for word in words_to_check:
-        correct = find_correct_spelling(word.lower(), wordFrequencies)
+        correct = spell_correcter.find_correct_spelling(word.lower())
         if correct is None:
             correct = word
         print(f"{word} {correct}")
